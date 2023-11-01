@@ -39,19 +39,13 @@ While implementing lambda calculus in JavaScript is a fascinating exercise, it's
 ### Strategies to Handle Stack Overflow
 
 1. **Optimizing Recursion:**
-   - Try to optimize recursive functions as much as possible. Tail recursion can be more stack-efficient, although JavaScript engines do not currently optimize tail calls.
-
-2. **Incremental Computation:**
-   - Break down extensive computations into smaller parts, running them incrementally to avoid filling the stack.
+   - Tail recursion can be more stack-efficient, although JavaScript engines do not currently optimize tail calls.
    
-3. **Adjusting Stack Size:**
+2. **Adjusting Stack Size:**
    - In Node.js, you can increase the stack size using the `--stack-size` option. However, use this with caution as it might lead to higher memory usage.
      ```bash
      node --stack-size=1000 yourfile.js
      ```
-   
-4. **Exploring Other Languages:**
-   - Consider using a language with better support for functional programming and recursion, such as Haskell or Lisp, if lambda calculus computations are central to your project.
 
 ### Conclusion
 

@@ -31,7 +31,6 @@
  * computation and is considered a fundamental principle of computability.
  */
 
-// Define Lambda Calculus (λ-calculus)
 /**
  * λ-calculus is the smallest universal programming language.
  * It consists of:

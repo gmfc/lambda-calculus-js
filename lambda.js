@@ -167,3 +167,67 @@ const DIV = Z(
 );
 
 // console.log('4 / 2 =', toNumber(DIV(FOUR)(TWO)));
+
+const EXP = x => y => y(MULT(x))(ONE);
+console.log('2 ^ 3 =', toNumber(EXP(TWO)(TREE))); // 8
+
+const MOD = Z(
+    f => x => y => 
+        LEQ(y)(x)
+            (v => f(SUB(x)(y))(y)(v))
+            (x)
+);
+console.log('4 mod 3 =', toNumber(MOD(FOUR)(TREE))); // 1
+
+const FACTORIAL = Z(
+    f => n => 
+        ISZERO(n)
+            (ONE)
+            (MULT(n)(f(PRED(n))))
+);
+// Stack Overflow...
+// console.log('4! =', toNumber(FACTORIAL(FOUR))); // 24
+
+const FIB = Z(
+    f => n => 
+        ISZERO(n)
+            (ZERO)
+            (ISZERO(PRED(n))
+                (ONE)
+                (SUM(f(SUB(n)(ONE)))(f(SUB(n)(TWO)))))
+);
+// Stack Overflow...
+// console.log('Fib(4) =', toNumber(FIB(FOUR))); // 3
+
+const CONS = x => y => f => f(x)(y);
+const HEAD = x => x(TRUE);
+const TAIL = x => x(FALSE);
+
+const myList = CONS(ONE)(CONS(TWO)(CONS(TREE)(CONS(FOUR)(FALSE))));
+console.log('Head:', toNumber(HEAD(myList))); // 1
+console.log('Tail Head:', toNumber(HEAD(TAIL(myList)))); // 2
+
+// Could not fuly test due to Stack overflows
+const MAP = Z(
+    f => lst => func => 
+        ISZERO(HEAD(lst))
+            (FALSE)
+            (CONS(func(HEAD(lst)))(f(TAIL(lst))(func)))
+);
+
+const FILTER = Z(
+    f => lst => pred => 
+        ISZERO(HEAD(lst))
+            (FALSE)
+            (pred(HEAD(lst))
+                (CONS(HEAD(lst))(f(TAIL(lst))(pred)))
+                (f(TAIL(lst))(pred)))
+);
+
+const REDUCE = Z(
+    f => lst => func => acc => 
+        ISZERO(HEAD(lst))
+            (acc)
+            (f(TAIL(lst))(func)(func(acc)(HEAD(lst))))
+);
+

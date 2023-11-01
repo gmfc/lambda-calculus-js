@@ -32,6 +32,32 @@ The JavaScript code demonstrates various aspects of Lambda Calculus:
 
 You can run the JavaScript code in any JavaScript environment, like a web browser console or Node.js. The code includes console.log statements to output the results of various lambda calculus operations, helping understand the execution and the results of the lambda calculus expressions and functions defined.
 
+## Handling Large Computations and Stack Overflow in JavaScript
+
+While implementing lambda calculus in JavaScript is a fascinating exercise, it's essential to be cautious of the language's limitations. JavaScript engines, such as V8 used in Node.js and browsers, have a maximum call stack size, limiting the recursion depth. Since lambda calculus heavily relies on recursion and function calls, you might encounter stack overflow errors for more complex or lengthy computations.
+
+### Strategies to Handle Stack Overflow
+
+1. **Optimizing Recursion:**
+   - Try to optimize recursive functions as much as possible. Tail recursion can be more stack-efficient, although JavaScript engines do not currently optimize tail calls.
+
+2. **Incremental Computation:**
+   - Break down extensive computations into smaller parts, running them incrementally to avoid filling the stack.
+   
+3. **Adjusting Stack Size:**
+   - In Node.js, you can increase the stack size using the `--stack-size` option. However, use this with caution as it might lead to higher memory usage.
+     ```bash
+     node --stack-size=1000 yourfile.js
+     ```
+   
+4. **Exploring Other Languages:**
+   - Consider using a language with better support for functional programming and recursion, such as Haskell or Lisp, if lambda calculus computations are central to your project.
+
+### Conclusion
+
+Lambda calculus in JavaScript is an exploratory journey into the fundamentals of computation. However, due to the language's constraints, it might not be suitable for extensive lambda calculus computations. Always be mindful of the stack size and consider optimizing or partitioning the calculations, or exploring other languages more suited to heavy computational tasks.
+
+
 ## Contribution
 
 Feel free to contribute to this repository by creating issues or pull requests if you find any problems or if you have additional content related to lambda calculus and its implementation using JavaScript.

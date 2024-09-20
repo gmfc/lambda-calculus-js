@@ -82,151 +82,264 @@
  * - NAME(X)
  */
 
-// Lets define the Identity Function λx.x in JS
-const ID = x => x
-// Here we defined a funcion ID(x) => x
-// It recieves x and returns it.
-// We can say that it replaces x by whathever is given as parameter.
-// That is β-conversion
-console.log('(λx.x)true ->', ID(true))
+/**
+ * Identity Function
+ * λx.x
+ */
+const ID = x => x;
 
-// but 'true' is not valid λ-calculus.
-// Lets define TRUE
-// λxy.x
-// TRUE recieves 2 parameters and returns the first one
-const TRUE = x => y => x
-// lets replicate the last function call
-console.log('(λx.x)λxy.x ->', ID(TRUE));
+// Boolean Logic
 
-// lets define FALSE as being a function that recieves 2 parameters and
-// returns the seccond one
-const FALSE = x => y => y
-console.log('ID(FALSE) ->', ID(FALSE)) // FALSE
+/**
+ * TRUE and FALSE
+ * TRUE = λx.λy.x
+ * FALSE = λx.λy.y
+ */
+const TRUE = x => y => x;
+const FALSE = x => y => y;
 
-// With that, we can define NOT
-const NOT = x => x(FALSE)(TRUE)
-// NOT recieves TRUE or FALSE in x
-// if NOT recieves TRUE, then:
-// TRUE(FALSE)(TRUE) = FALSE
-// if NOT reciefes FALSE, then:
-// FALSE(FALSE)(TRUE) = TRUE
-console.log('NOT(TRUE)', NOT(TRUE)) // FALSE
-console.log('NOT(FALSE)', NOT(FALSE)) // TRUE
+/**
+ * Logical NOT
+ * NOT = λx.x FALSE TRUE
+ */
+const NOT = x => x(FALSE)(TRUE);
 
-// Lets define AND and OR
-const AND = x => y => x(y)(FALSE)
-const OR = x => y => x(TRUE)(y)
+/**
+ * Logical AND
+ * AND = λx.λy.x y FALSE
+ */
+const AND = x => y => x(y)(FALSE);
 
-console.log('AND(TRUE)(TRUE)', AND(TRUE)(TRUE))
-console.log('AND(TRUE)(FALSE)', AND(TRUE)(FALSE))
-console.log('OR(TRUE)(FALSE)', OR(TRUE)(FALSE))
-console.log('OR(FALSE)(FALSE)', OR(FALSE)(FALSE))
+/**
+ * Logical OR
+ * OR = λx.λy.x TRUE y
+ */
+const OR = x => y => x(TRUE)(y);
 
+// Numbers (Church Numerals)
 
-// NUMBERS
-// HELPERS for visualization
-const toNumber = (n) => n((x) => x + 1)(0)
+/**
+ * ZERO to FOUR using Church Numerals
+ * ZERO = λf.λx.x
+ * SUCC = λn.λf.λx.f (n f x)
+ */
+const ZERO = f => x => x;
+const ONE = f => x => f(x);
+const TWO = f => x => f(f(x));
+const THREE = f => x => f(f(f(x)));
+const FOUR = f => x => f(f(f(f(x))));
 
-const SUCC = x => y => z => y(x(y)(z))
-const ZERO = FALSE
-const ONE = SUCC(ZERO)
-const TWO = SUCC(ONE)
-const TREE = SUCC(TWO)
-const FOUR = SUCC(TREE)
-const PRED = u => v => w => u(x => y => y(x(v)))(v => w)(v => v)
+/**
+ * Successor Function
+ * SUCC = λn.λf.λx.f (n f x)
+ */
+const SUCC = n => f => x => f(n(f)(x));
 
-const ISZERO = x => x(y => FALSE)(TRUE)
-const SUM = x => y => x(SUCC)(y)
-const SUB = x => y => y(PRED)(x)
-const MULT = x => y => z => x(y(z))
-const LEQ = x => y => ISZERO(SUB(x)(y))
-const MEQ = x => y => ISZERO(SUB(y)(x))
-const EQ = x => y => AND(LEQ(x)(y))(LEQ(x)(y))
+/**
+ * Addition
+ * ADD = λn.λk.λf.λx.n f (k f x)
+ */
+const ADD = n => k => f => x => n(f)(k(f)(x));
 
-console.log('1 + 4 =', toNumber(SUM(ONE)(FOUR)));
-console.log('4 - 2 =', toNumber(SUB(FOUR)(TWO)));
-console.log('4 * 3 =', toNumber(MULT(FOUR)(TREE)));
+/**
+ * Multiplication
+ * MULT = λn.λk.λf.λx.n (k f) x
+ */
+const MULT = n => k => f => x => n(k(f))(x);
 
-console.log('4 >= 3 =', MEQ(FOUR)(TREE));
-console.log('4 <= 3 =', LEQ(FOUR)(TREE));
-console.log('4 = 4 =', EQ(FOUR)(FOUR));
+/**
+ * Exponentiation
+ * EXP = λn.λk.k n
+ */
+const EXP = n => k => k(n);
 
+/**
+ * Predecessor Function
+ * PRED = λn.λf.λx.n (λg.λh.h (g f)) (λu.x) (λu.u)
+ */
+const PRED = n => f => x => n(g => h => h(g(f)))(u => x)(u => u);
 
-// Y combinator
+/**
+ * Subtraction
+ * SUB = λn.λk.k PRED n
+ */
+const SUB = n => k => k(PRED)(n);
+
+/**
+ * Is Zero
+ * ISZERO = λn.n (λx.FALSE) TRUE
+ */
+const ISZERO = n => n(_ => FALSE)(TRUE);
+
+/**
+ * Less Than or Equal
+ * LEQ = λn.λk.ISZERO (SUB n k)
+ */
+const LEQ = n => k => ISZERO(SUB(n)(k));
+
+/**
+ * Equal
+ * EQ = λn.λk.AND (LEQ n k) (LEQ k n)
+ */
+const EQ = n => k => AND(LEQ(n)(k))(LEQ(k)(n));
+
+/**
+ * Modulo using the Z combinator
+ * MOD = Z (λf.λm.λn.IF (LEQ n m) (λx.f (SUB m n) n x) m)
+ */
 const Z = f => (x => f(v => x(x)(v)))(x => f(v => x(x)(v)));
 
-// Division implementation, tricky, could not fully test due to stack overflow...
-const DIV = Z(
-  g => n => m => f => x => 
-      (d => 
-          ISZERO(d)
-              (ZERO(f)(x)) 
-              (f(g(SUB(n)(m))(m)(f)(x)))
-      )(SUB(n)(m))
+const MOD = Z(f => m => n =>
+  LEQ(n)(m)
+    (x => f(SUB(m)(n))(n)(x))
+    (m)
 );
 
-// console.log('4 / 2 =', toNumber(DIV(FOUR)(TWO)));
-
-const EXP = x => y => y(MULT(x))(ONE);
-console.log('2 ^ 3 =', toNumber(EXP(TWO)(TREE))); // 8
-
-const MOD = Z(
-    f => x => y => 
-        LEQ(y)(x)
-            (v => f(SUB(x)(y))(y)(v))
-            (x)
+// Factorial Function
+const FACTORIAL = Z(f => n =>
+  ISZERO(n)
+    (ONE)
+    (MULT(n)(f(PRED(n))))
 );
-console.log('4 mod 3 =', toNumber(MOD(FOUR)(TREE))); // 1
 
-const FACTORIAL = Z(
-    f => n => 
-        ISZERO(n)
-            (ONE)
-            (MULT(n)(f(PRED(n))))
+// Fibonacci Function
+const FIB = Z(f => n =>
+  LEQ(n)(ONE)
+    (n)
+    (ADD(f(PRED(n)))(f(SUB(n)(TWO))))
 );
-// Stack Overflow...
-// console.log('4! =', toNumber(FACTORIAL(FOUR))); // 24
 
-const FIB = Z(
-    f => n => 
-        ISZERO(n)
-            (ZERO)
-            (ISZERO(PRED(n))
-                (ONE)
-                (SUM(f(SUB(n)(ONE)))(f(SUB(n)(TWO)))))
+// Convert Church numeral to JavaScript number
+const toNumber = n => n(x => x + 1)(0);
+
+// Convert JavaScript number to Church numeral
+const fromNumber = n => n === 0 ? ZERO : SUCC(fromNumber(n - 1));
+
+// Testing the functions
+console.log('ID(5) =', ID(5)); // 5
+
+// Logical Operations
+console.log('NOT(TRUE) =', NOT(TRUE) === FALSE); // true
+console.log('NOT(FALSE) =', NOT(FALSE) === TRUE); // true
+console.log('AND(TRUE)(FALSE) =', AND(TRUE)(FALSE) === FALSE); // true
+console.log('OR(TRUE)(FALSE) =', OR(TRUE)(FALSE) === TRUE); // true
+
+// Arithmetic Operations
+console.log('toNumber(ZERO) =', toNumber(ZERO)); // 0
+console.log('toNumber(ONE) =', toNumber(ONE)); // 1
+console.log('toNumber(TWO) =', toNumber(TWO)); // 2
+console.log('toNumber(THREE) =', toNumber(THREE)); // 3
+console.log('toNumber(FOUR) =', toNumber(FOUR)); // 4
+
+console.log('1 + 4 =', toNumber(ADD(ONE)(FOUR))); // 5
+console.log('4 - 2 =', toNumber(SUB(FOUR)(TWO))); // 2
+console.log('4 * 3 =', toNumber(MULT(FOUR)(THREE))); // 12
+console.log('2 ^ 3 =', toNumber(EXP(TWO)(THREE))); // 8
+
+// Comparison Operations
+console.log('4 <= 3 =', LEQ(FOUR)(THREE) === TRUE); // false
+console.log('3 <= 4 =', LEQ(THREE)(FOUR) === TRUE); // true
+console.log('4 == 4 =', EQ(FOUR)(FOUR) === TRUE); // true
+
+// Modulo Operation
+console.log('4 mod 3 =', toNumber(MOD(FOUR)(THREE))); // 1
+
+// Factorial
+console.log('4! =', toNumber(FACTORIAL(FOUR))); // 24
+
+// Fibonacci
+console.log('Fib(4) =', toNumber(FIB(FOUR))); // 3
+
+// Lists
+
+/**
+ * Empty List
+ * NIL = λx.TRUE
+ */
+const NIL = x => TRUE;
+
+/**
+ * Cons Cell
+ * CONS = λh.λt.λf.f h t
+ */
+const CONS = h => t => f => f(h)(t);
+
+/**
+ * Head
+ * HEAD = λl.l (λh.λt.h)
+ */
+const HEAD = l => l(h => t => h);
+
+/**
+ * Tail
+ * TAIL = λl.l (λh.λt.t)
+ */
+const TAIL = l => l(h => t => t);
+
+/**
+ * Is Empty
+ * ISNIL = λl.l (λh.λt.FALSE) TRUE
+ */
+const ISNIL = l => l(h => t => FALSE)(TRUE);
+
+/**
+ * Map Function
+ * MAP = Z (λf.λl.λm.IF (ISNIL l) NIL (CONS (m (HEAD l)) (f (TAIL l) m)))
+ */
+const MAP = Z(f => l => m =>
+  ISNIL(l)
+    (NIL)
+    (CONS(m(HEAD(l)))(f(TAIL(l))(m)))
 );
-// Stack Overflow...
-// console.log('Fib(4) =', toNumber(FIB(FOUR))); // 3
 
-const CONS = x => y => f => f(x)(y);
-const HEAD = x => x(TRUE);
-const TAIL = x => x(FALSE);
+/**
+ * Filter Function
+ * FILTER = Z (λf.λl.λp.IF (ISNIL l) NIL (IF (p (HEAD l)) (CONS (HEAD l) (f (TAIL l) p)) (f (TAIL l) p)))
+ */
+const FILTER = Z(f => l => p =>
+  ISNIL(l)
+    (NIL)
+    (p(HEAD(l))
+      (CONS(HEAD(l))(f(TAIL(l))(p)))
+      (f(TAIL(l))(p))
+    )
+);
 
-const myList = CONS(ONE)(CONS(TWO)(CONS(TREE)(CONS(FOUR)(FALSE))));
+/**
+ * Reduce Function
+ * REDUCE = Z (λf.λl.λm.λacc.IF (ISNIL l) acc (f (TAIL l) m (m acc (HEAD l))))
+ */
+const REDUCE = Z(f => l => m => acc =>
+  ISNIL(l)
+    (acc)
+    (f(TAIL(l))(m)(m(acc)(HEAD(l))))
+);
+
+// Creating a list: [1, 2, 3, 4]
+const myList = CONS(ONE)(CONS(TWO)(CONS(THREE)(CONS(FOUR)(NIL))));
+
+// Testing List Functions
 console.log('Head:', toNumber(HEAD(myList))); // 1
-console.log('Tail Head:', toNumber(HEAD(TAIL(myList)))); // 2
+console.log('Second Element:', toNumber(HEAD(TAIL(myList)))); // 2
+console.log('Is NIL:', ISNIL(NIL) === TRUE); // true
+console.log('Is myList NIL:', ISNIL(myList) === TRUE); // false
 
-// Could not fuly test due to Stack overflows
-const MAP = Z(
-    f => lst => func => 
-        ISZERO(HEAD(lst))
-            (FALSE)
-            (CONS(func(HEAD(lst)))(f(TAIL(lst))(func)))
-);
+// Map: Increment each element
+const increment = n => SUCC(n);
+const incrementedList = MAP(myList)(increment);
+console.log('Incremented Head:', toNumber(HEAD(incrementedList))); // 2
 
-const FILTER = Z(
-    f => lst => pred => 
-        ISZERO(HEAD(lst))
-            (FALSE)
-            (pred(HEAD(lst))
-                (CONS(HEAD(lst))(f(TAIL(lst))(pred)))
-                (f(TAIL(lst))(pred)))
-);
+// Filter: Keep even numbers
+const isEven = n => ISZERO(MOD(n)(TWO));
+const evenList = FILTER(myList)(isEven);
+console.log('First Even:', ISNIL(evenList) === TRUE ? 'None' : toNumber(HEAD(evenList))); // 2
 
-const REDUCE = Z(
-    f => lst => func => acc => 
-        ISZERO(HEAD(lst))
-            (acc)
-            (f(TAIL(lst))(func)(func(acc)(HEAD(lst))))
-);
+// Reduce: Sum of the list
+const sum = a => b => ADD(a)(b);
+const total = REDUCE(myList)(sum)(ZERO);
+console.log('Sum of List:', toNumber(total)); // 10
+
+// Note: Be cautious with recursion depth in JavaScript
+// Large computations may cause stack overflow due to recursion limitations
+
 
